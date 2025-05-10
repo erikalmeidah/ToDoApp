@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "daily-todo-app",
+    "name": "To Do App",
     "slug": "daily-todo-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,14 +8,21 @@
     "scheme": "dailytodoapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.dailytodoapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.yourname.dailytodoapp",
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -37,6 +44,19 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "21f44bfa-9090-4c7b-ac63-d5110a9cdb54"
+      }
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/21f44bfa-9090-4c7b-ac63-d5110a9cdb54"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
