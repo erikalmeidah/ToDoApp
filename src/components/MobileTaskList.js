@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
-import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
+import { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { toTitleCase } from '../utils/stringHelpers';
 import CompletedTasks from './CompletedTasks';
 import Reminders from './Reminders';
@@ -136,98 +137,116 @@ const MobileTaskList = ({
     );
   };
 
-  // Create a footer component that includes CompletedTasks and Reminders
-  const renderListFooter = () => (
-    <View style={styles.footerContainer}>
-      {completedTasksProps && <CompletedTasks {...completedTasksProps} />}
-      {remindersProps && <Reminders {...remindersProps} />}
-      
-      {/* Add empty view with extra padding to ensure everything is visible */}
-      <View style={styles.extraPadding} />
-    </View>
-  );
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={100}
+      keyboardVerticalOffset={Platform.OS === 'android' ? 120 : 100}
       style={styles.container}
     >
-      <View style={[styles.tasksContainer, isAndroid && styles.androidTasksContainer]}>
-        <Text style={[
-          styles.taskHeader,
-          isDarkMode ? styles.textDark : styles.textLight,
-          isAndroid && styles.androidTaskHeader
-        ]}>
-          Tasks for {selectedDay}
-        </Text>
-        
-        {flattenedTasks.length > 0 ? (
-          <DraggableFlatList
-            data={flattenedTasks}
-            keyExtractor={(item) => item.id}
-            onDragEnd={({ from, to, data }) => {
-              // Only handle reordering for non-section items
-              if (!data[from].isSection && !data[to].isSection) {
-                // Find the group type for these items
-                const fromType = data[from].type;
-                const toType = data[to].type;
-                
-                // If same type, calculate indices within that type
-                if (fromType === toType) {
-                  // Find all indices of items with this type
-                  const typeIndices = data
-                    .map((item, idx) => item.type === fromType && !item.isSection ? idx : -1)
-                    .filter(idx => idx !== -1);
-                  
-                  // Find position within the filtered array
-                  const fromTypeIndex = typeIndices.indexOf(from);
-                  const toTypeIndex = typeIndices.indexOf(to);
-                  
-                  // Call reorderTasks with type-specific indices
-                  onReorderTasks(fromType, fromTypeIndex, toType, toTypeIndex);
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={true}
+      >
+        <View style={[styles.tasksContainer, isAndroid && styles.androidTasksContainer]}>
+          <Text style={[
+            styles.taskHeader,
+            isDarkMode ? styles.textDark : styles.textLight,
+            isAndroid && styles.androidTaskHeader
+          ]}>
+            Tasks for {selectedDay}
+          </Text>
+          
+          {/* Task List */}
+          {flattenedTasks.length > 0 ? (
+            <View style={styles.tasksListWrapper}>
+              {flattenedTasks.map((item) => {
+                // Create a non-draggable version of the list for simplicity
+                // We can enable drag with more complex implementation later
+                if (item.isSection) {
+                  return (
+                    <View 
+                      key={item.id}
+                      style={[styles.sectionHeader, isAndroid && styles.androidSectionHeader]}
+                    >
+                      <Text style={[
+                        styles.sectionHeaderText,
+                        isDarkMode ? styles.textDark : styles.textLight,
+                        isAndroid && styles.androidSectionHeaderText
+                      ]}>
+                        {item.text}
+                      </Text>
+                    </View>
+                  );
                 }
-              }
-            }}
-            renderItem={renderItem}
-            containerStyle={styles.draggableList}
-            contentContainerStyle={styles.listContentContainer}
-            ListFooterComponent={renderListFooter}
-          />
-        ) : (
-          <View>
-            <Text style={[
-              styles.emptyText,
-              isDarkMode ? styles.textDark : styles.textLight
-            ]}>
-              No tasks for today. Add some below!
-            </Text>
-            {renderListFooter()}
+                
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => onTaskComplete(item.id)}
+                    style={[
+                      styles.taskItem,
+                      isDarkMode ? styles.taskItemDark : styles.taskItemLight,
+                      isAndroid && styles.androidTaskItem
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      isDarkMode ? styles.textDark : styles.textLight,
+                      isAndroid && styles.androidTaskText
+                    ]}>
+                      {item.text}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : (
+            <View>
+              <Text style={[
+                styles.emptyText,
+                isDarkMode ? styles.textDark : styles.textLight
+              ]}>
+                No tasks for today. Add some below!
+              </Text>
+            </View>
+          )}
+          
+          {/* Task Input */}
+          <View style={[styles.inputContainer, isAndroid && styles.androidInputContainer]}>
+            <TextInput
+              style={[
+                styles.input,
+                isDarkMode ? styles.inputDark : styles.inputLight,
+                isDarkMode ? styles.textDark : styles.textLight,
+                isAndroid && styles.androidInput
+              ]}
+              placeholder="Add custom task"
+              placeholderTextColor={isDarkMode ? '#888' : '#666'}
+              value={newTaskText}
+              onChangeText={setNewTaskText}
+              onSubmitEditing={handleAddTask}
+            />
+            <TouchableOpacity
+              style={[styles.button, styles.buttonPrimary, isAndroid && styles.androidButton]}
+              onPress={handleAddTask}
+            >
+              <Text style={[styles.buttonText, isAndroid && styles.androidButtonText]}>
+                Add Task
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
-        
-        <View style={[styles.inputContainer, isAndroid && styles.androidInputContainer]}>
-          <TextInput
-            style={[
-              styles.input,
-              isDarkMode ? styles.inputDark : styles.inputLight,
-              isDarkMode ? styles.textDark : styles.textLight,
-              isAndroid && styles.androidInput
-            ]}
-            placeholder="Add custom task"
-            placeholderTextColor={isDarkMode ? '#888' : '#666'}
-            value={newTaskText}
-            onChangeText={setNewTaskText}
-            onSubmitEditing={handleAddTask}
-          />
-          <TouchableOpacity
-            style={[styles.button, styles.buttonPrimary, isAndroid && styles.androidButton]}
-            onPress={handleAddTask}
-          >
-            <Text style={[styles.buttonText, isAndroid && styles.androidButtonText]}>Add Task</Text>
-          </TouchableOpacity>
+          
+          {/* Completed Tasks Component */}
+          {completedTasksProps && <CompletedTasks {...completedTasksProps} />}
+          
+          {/* Reminders Component */}
+          {remindersProps && <Reminders {...remindersProps} />}
+          
+          {/* Extra Padding */}
+          <View style={styles.extraPadding} />
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -237,11 +256,20 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 80,
+  },
   tasksContainer: {
     width: '100%',
     maxWidth: 650,
     alignSelf: 'center',
     paddingHorizontal: 15,
+    paddingBottom: 30,
   },
   androidTasksContainer: {
     paddingHorizontal: 10,
@@ -254,6 +282,9 @@ const styles = StyleSheet.create({
   androidTaskHeader: {
     fontSize: 18,
     marginVertical: 10,
+  },
+  tasksListWrapper: {
+    width: '100%',
   },
   sectionHeader: {
     padding: 10,
@@ -272,12 +303,6 @@ const styles = StyleSheet.create({
   },
   androidSectionHeaderText: {
     fontSize: 14,
-  },
-  draggableList: {
-    width: '100%',
-  },
-  listContentContainer: {
-    paddingBottom: 30, // Add padding to the list content
   },
   taskItem: {
     padding: 15,
@@ -312,12 +337,12 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginTop: 20,
+    marginBottom: 20,
     width: '100%',
-    marginBottom: 30,
   },
   androidInputContainer: {
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 15,
+    marginBottom: 15,
   },
   input: {
     width: '100%',
@@ -375,13 +400,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     fontStyle: 'italic',
   },
-  footerContainer: {
-    marginTop: 20,
-    paddingBottom: 50, // Increased from 30 to 50
-    width: '100%',
-  },
   extraPadding: {
-    height: 100, // Add extra padding at the bottom
+    height: 150, // Extra padding at the bottom
   }
 });
 

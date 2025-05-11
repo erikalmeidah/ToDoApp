@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Switch, Platform } from 'react-native';
+import { Platform, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 const Header = ({ toggleSidebar, openAdminModal, isDarkMode, toggleTheme }) => {
   const isAndroid = Platform.OS === 'android';
@@ -99,6 +98,8 @@ const styles = StyleSheet.create({
   androidHeader: {
     paddingVertical: 10,
     height: 56, // Material Design standard header height
+    // Add this line to ensure header doesn't conflict with status bar
+    marginTop: 5, // A small extra margin for Android to avoid any potential clipping
   },
   darkHeader: {
     backgroundColor: '#252525',

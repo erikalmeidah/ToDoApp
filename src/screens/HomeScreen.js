@@ -146,11 +146,13 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={[
       theme.container,
       isDarkMode ? theme.darkContainer : theme.lightContainer,
-      isWeb && { height: '100%' }
+      isWeb && { height: '100%' },
+      Platform.OS === 'android' && { paddingTop: StatusBar.currentHeight }
     ]}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={isDarkMode ? '#1e1e1e' : '#f5f5f5'}
+        translucent={true}
       />
       
       <Header 
